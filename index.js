@@ -33,6 +33,7 @@ intervalId = setInterval(sendRequest, 1000);
 
 const port = process.env.PORT || 3000;
 const server = http.createServer((req, res) => {
+  if (req.url === '/stop'){clearInterval(intervalId); res.statusCode = 418; res.end(); return}
   if (req.url === '/favicon.ico') {
     res.statusCode = 204; // No Content
     res.end();
