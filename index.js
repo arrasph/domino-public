@@ -1,8 +1,28 @@
 const http = require('http');
 
+let trialcount;
 let intervalId;
 let attempt = 0;
 let startAt = Math.floor(new Date().getTime() / 1000.0);
+
+async function init(){
+  const res = await fetch("http://shimage.net/domino/domino.php", {
+    "credentials": "include",
+    "headers": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0",
+        "Accept": "*/*",
+        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest"
+    },
+    "referrer": "http://shimage.net/domino/",
+    "body": "action=init",
+    "method": "POST",
+    "mode": "cors"
+  })
+  const txt = await res.text();
+  return txt.split(",")[1]; // this is trialcount
+}
 
 function sendRequest() {
   fetch("http://shimage.net/domino/domino.php", {
@@ -14,7 +34,7 @@ function sendRequest() {
       "cookie": "PHPSESSID=1ojhhi9fvbmbqujsvg1hkosbe6",
       "Referer": "http://shimage.net/domino/"
     },
-    "body": "action=countup&trialcount=2592",
+    "body": `action=countup&trialcount=${trialcount}`,
     "method": "POST"
   })
   .then(response => {
@@ -25,6 +45,7 @@ function sendRequest() {
     if (response.status === 403) {
       console.log("403 Forbidden received. Stopping requests.");
       clearInterval(intervalId);
+      trialcount = undefined;
     }
   })
   .catch(error => {
@@ -32,14 +53,14 @@ function sendRequest() {
   });
 }
 
-intervalId = setInterval(sendRequest, 1050);
+// intervalId = setInterval(sendRequest, 1050);
 
 const port = process.env.PORT || 3000;
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   console.log(`[${new Date().toLocaleTimeString()}] 新規アクセス: ${req.url}`);
   if (req.url === '/status'){
     let convTime = new Date(startAt * 1000);
-    let msg=`ID=${intervalId};Attempt=${attempt};start=${convTime};now=${new Date()}`;
+    let msg=`ID=${intervalId};trialcount=${trialcount};attempt=${attempt};start=${convTime};now=${new Date()}`;
     res.statusCode = 200;
     res.end(msg);
     return
@@ -47,13 +68,18 @@ const server = http.createServer((req, res) => {
   if (req.url === '/stop'){
     clearInterval(intervalId);
     intervalId = undefined;
+    trialcount = undefined;
     res.statusCode = 418;
     res.end();
     return
   }
-  if (req.url === '/start'){
+  if (req.url === '/start' || req.url==="/"){
+    if(!trialcount){
+      trialcount = await init();
+    }
     if (!intervalId){
-      intervalId = setInterval(sendRequest, 1000);
+      attempt = 0;
+      intervalId = setInterval(sendRequest, 1050);
       res.statusCode = 200;
       res.end("Restarting ...");
       return;
