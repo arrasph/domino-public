@@ -1,6 +1,8 @@
 const http = require('http');
 
 let intervalId;
+let attempt = 0;
+let startAt = Math.floor(new Date().getTime() / 1000.0);
 
 function sendRequest() {
   fetch("http://shimage.net/domino/domino.php", {
@@ -16,6 +18,7 @@ function sendRequest() {
     "method": "POST"
   })
   .then(response => {
+    attempt++;
     console.log(`[${new Date().toLocaleTimeString()}] POST Status:`, response.status);
     
     // Stop setInterval if status is 403
@@ -35,7 +38,8 @@ const port = process.env.PORT || 3000;
 const server = http.createServer((req, res) => {
   console.log(`[${new Date().toLocaleTimeString()}] 新規アクセス: ${req.url}`);
   if (req.url === '/status'){
-    let msg=`${intervalId}`;
+    let convTime = new Date(startAt * 1000);
+    let msg=`ID=${intervalId};Attempt=${attempt};start=${convTime};now=${new Date()}`;
     res.statusCode = 200;
     res.end(msg);
     return
