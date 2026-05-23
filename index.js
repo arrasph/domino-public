@@ -9,10 +9,10 @@ function sendRequest() {
       "accept-language": "ja,en-US;q=0.9,en;q=0.8",
       "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
       "x-requested-with": "XMLHttpRequest",
-      "cookie": "PHPSESSID=bkspespmnp5lrgrm5rms10ifi5",
+      "cookie": "PHPSESSID=1ojhhi9fvbmbqujsvg1hkosbe6",
       "Referer": "http://shimage.net/domino/"
     },
-    "body": "action=countup&trialcount=2573",
+    "body": "action=countup&trialcount=2592",
     "method": "POST"
   })
   .then(response => {
