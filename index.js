@@ -29,18 +29,37 @@ function sendRequest() {
   });
 }
 
-intervalId = setInterval(sendRequest, 1000);
+intervalId = setInterval(sendRequest, 1050);
 
 const port = process.env.PORT || 3000;
 const server = http.createServer((req, res) => {
-  if (req.url === '/stop'){clearInterval(intervalId); res.statusCode = 418; res.end(); return}
+  console.log(`[${new Date().toLocaleTimeString()}] 新規アクセス: ${req.url}`);
+  if (req.url === '/status'){
+    let msg=`${intervalId}`;
+    res.statusCode = 200;
+    res.end(msg);
+    return
+  }
+  if (req.url === '/stop'){
+    clearInterval(intervalId);
+    intervalId = undefined;
+    res.statusCode = 418;
+    res.end();
+    return
+  }
+  if (req.url === '/start'){
+    if (!intervalId){
+      intervalId = setInterval(sendRequest, 1000);
+      res.statusCode = 200;
+      res.end("Restarting ...");
+      return;
+    }
+  }
   if (req.url === '/favicon.ico') {
     res.statusCode = 204; // No Content
     res.end();
     return;
   }
-
-  console.log(`[${new Date().toLocaleTimeString()}] 新規アクセス: ${req.url}`);
 
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
